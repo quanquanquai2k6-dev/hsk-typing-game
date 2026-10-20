@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Gõ Chữ HSK 1 - HSK 3</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .game-wrapper {
+            background: #181825;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 520px;
+            position: relative;
+        }
+        h1 {
+            color: #f38ba8;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #313244;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .stats-bar span {
+            color: #f9e2af;
+        }
+        #game-canvas {
+            background: #11111b;
+            border: 2px solid #45475a;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto 15px;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #45475a;
+            border-radius: 8px;
+            background: #313244;
+            color: #cdd6f4;
+            outline: none;
+            text-align: center;
+        }
+        input[type="text"]::placeholder {
+            color: #a6adc8;
+            font-size: 15px;
+        }
+        input[type="text"]:focus {
+            border-color: #f38ba8;
+        }
+        .btn {
+            padding: 10px 18px;
+            font-size: 15px;
+            background: #a6e3a1;
+            color: #11111b;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin: 5px 0;
+            width: 100%;
+        }
+        .btn:hover {
+            background: #94e2d5;
+        }
+        .btn-hsk {
+            background: #89b4fa;
+            color: #11111b;
+        }
+        .btn-hsk:hover {
+            background: #b4befe;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(24, 24, 37, 0.98);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+        }
+        .overlay h2 {
+            font-size: 28px;
+            color: #f38ba8;
+            margin-bottom: 5px;
+        }
+        .overlay p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 240px;
+        }
+        .review-box {
+            width: 100%;
+            max-width: 340px;
+            background: #1e1e2e;
+            border: 1px solid #eba0ac;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .review-title {
+            font-weight: bold;
+            color: #eba0ac;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .review-list {
+            max-height: 90px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .review-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #313244;
+            padding: 3px 0;
+        }
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        .leaderboard-box {
+            margin-top: 5px;
+            background: #1e1e2e;
+            border: 1px solid #45475a;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 340px;
+            padding: 8px;
+            text-align: left;
+        }
+        .leaderboard-title {
+            font-weight: bold;
+            color: #f9e2af;
+            margin-bottom: 6px;
+            text-align: center;
+            font-size: 13px;
+        }
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 4px 0;
+            font-size: 11px;
+            background: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: #f9e2af;
+            color: #11111b;
+            border-color: #f9e2af;
+        }
+        .leaderboard-list {
+            max-height: 90px;
+            overflow-y: auto;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            border-bottom: 1px dashed #313244;
+            padding: 4px 0;
+        }
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+        #player-name-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #89b4fa;
+            border-radius: 8px;
+            background: #313244;
+            color: #cdd6f4;
+            outline: none;
+            text-align: center;
+            width: 100%;
+            max-width: 240px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <h1>Luyện Từ Vựng HSK 1 - HSK 3</h1>
+    
+    <div class="stats-bar">
+        <div>Người chơi: <span id="current-player-display">Khách</span></div>
+        <div>Điểm: <span id="score">0</span></div>
+        <div>HP: <span id="hp">❤️❤️❤️</span></div>
+    </div>
+
+    <canvas id="game-canvas" width="480" height="340"></canvas>
+
+    <div class="input-container">
+        <input type="text" id="word-input" placeholder="Gõ Pinyin hoặc Chữ Hán..." disabled autocomplete="off">
+    </div>
+
+    <div id="start-overlay" class="overlay">
+        <h2 id="overlay-title">HSK Typing Master</h2>
+        <p id="overlay-desc">Nhập tên và chọn cấp độ của bạn để bắt đầu!</p>
+        <input type="text" id="player-name-input" placeholder="Tên của bạn..." value="Player 1">
+        <div id="game-review-container" style="display: none;" class="review-box">
+            <div class="review-title">📖 DANH SÁCH TỪ VỰNG VỪA CHƠI</div>
+            <div class="review-list" id="review-content-list"></div>
+        </div>
+        <div class="level-selector" id="level-selector-container">
+            <button class="btn btn-hsk" onclick="selectLevel(1)">Màn 1: HSK 1</button>
+            <button class="btn btn-hsk" onclick="selectLevel(2)">Màn 2: HSK 2</button>
+            <button class="btn btn-hsk" onclick="selectLevel(3)">Màn 3: HSK 3</button>
+        </div>
+        <div class="leaderboard-box">
+            <div class="leaderboard-title">🏆 BẢNG XẾP HẠNG TOP 5</div>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" id="tab-l1" onclick="changeLeaderboardTab(1)">HSK 1</button>
+                <button class="tab-btn" id="tab-l2" onclick="changeLeaderboardTab(2)">HSK 2</button>
+                <button class="tab-btn" id="tab-l3" onclick="changeLeaderboardTab(3)">HSK 3</button>
+            </div>
+            <div class="leaderboard-list" id="leaderboard-content"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const vocabulary = {
+        1: [
+            { hz: "爱", py: "ai", vi: "yêu" },
+            { hz: "爸爸", py: "baba", vi: "bố" },
+            { hz: "杯子", py: "beizi", vi: "cái cốc" },
+            { hz: "北京", py: "beijing", vi: "Bắc Kinh" },
+            { hz: "吃", py: "chi", vi: "ăn" },
+            { hz: "电脑", py: "diannao", vi: "máy tính" },
+            { hz: "老师", py: "laoshi", vi: "thầy cô" },
+            { hz: "谢谢", py: "xiexie", vi: "cảm ơn" },
+            { hz: "苹果", py: "pingguo", vi: "táo" },
+            { hz: "医生", py: "yisheng", vi: "bác sĩ" },
+            { hz: "不", py: "bu", vi: "không" },
+            { hz: "大", py: "da", vi: "to, lớn" },
+            { hz: "点", py: "dian", vi: "giờ, chút" },
+            { hz: "读", py: "du", vi: "đọc" },
+            { hz: "多", py: "duo", vi: "nhiều" },
+            { hz: "儿子", py: "erzi", vi: "con trai" },
+            { hz: "飞机", py: "feiji", vi: "máy bay" },
+            { hz: "高兴", py: "gaoxing", vi: "vui mừng" },
+            { hz: "汉语", py: "hanyu", vi: "tiếng Trung" },
+            { hz: "好", py: "hao", vi: "tốt, ngon" },
+            { hz: "喝", py: "he", vi: "uống" },
+            { hz: "很", py: "hen", vi: "rất" },
+            { hz: "家", py: "jia", vi: "nhà" },
+            { hz: "看", py: "kan", vi: "nhìn, xem" },
+            { hz: "猫", py: "mao", vi: "mèo" },
+            { hz: "米饭", py: "mifan", vi: "cơm" },
+            { hz: "明天", py: "mingtian", vi: "ngày mai" },
+            { hz: "名字", py: "mingzi", vi: "tên" },
+            { hz: "ni", py: "ni", vi: "bạn" },
+            { hz: "女儿", py: "nuer", vi: "con gái" }
+        ],
+        2: [
+            { hz: "帮助", py: "bangzhu", vi: "giúp đỡ" },
+            { hz: "咖啡", py: "kafei", vi: "cà phê" },
+            { hz: "唱歌", py: "changge", vi: "hát" },
+            { hz: "准备", py: "zhunbei", vi: "chuẩn bị" },
+            { hz: "便宜", py: "pianyi", vi: "rẻ" },
+            { hz: "机场", py: "jichang", vi: "sân bay" },
+            { hz: "跑步", py: "paobu", vi: "chạy bộ" },
+            { hz: "身体", py: "shenti", vi: "sức khỏe" },
+            { hz: "起床", py: "qichuang", vi: "thức dậy" },
+            { hz: "报纸", py: "baozhi", vi: "báo chí" },
+            { hz: "懂", py: "dong", vi: "hiểu" },
+            { hz: "房间", py: "fangjian", vi: "phòng" },
+            { hz: "非常", py: "feichang", vi: "rất, vô cùng" },
+            { hz: "告诉", py: "gaosu", vi: "báo cho biết" },
+            { hz: "哥哥", py: "gege", vi: "anh trai" },
+            { hz: "欢迎", py: "huanying", vi: "chào mừng" },
+            { hz: "回答", py: "huida", vi: "trả lời" },
+            { hz: "旅游", py: "luyou", vi: "du lịch" },
+            { hz: "晴", py: "qing", vi: "nắng, ráo" },
+            { hz: "手表", py: "shoubiao", vi: "đồng hồ" }
+        ],
+        3: [
+            { hz: "经常", py: "jingchang", vi: "thường xuyên" },
+            { hz: "简单", py: "jiandan", vi: "đơn giản" },
+            { hz: "舒服", py: "shufu", vi: "thoải mái" },
+            { hz: "安静", py: "anjing", vi: "yên tĩnh" },
+            { hz: "办法", py: "banfa", vi: "biện pháp" },
+            { hz: "办公室", py: "bangongshi", vi: "văn phòng" },
+            { hz: "超市", py: "chaoshi", vi: "siêu thị" },
+            { hz: "礼物", py: "liwu", vi: "quà tặng" },
+            { hz: "相信", py: "xiangxin", vi: "tin tưởng" },
+            { hz: "重要", py: "zhongyao", vi: "quan trọng" },
+            { hz: "菜单", py: "caidan", vi: "thực đơn" },
+            { hz: "聪明", py: "congming", vi: "thông minh" },
+            { hz: "电梯", py: "dianti", vi: "thang máy" },
+            { hz: "锻炼", py: "duanlian", vi: "luyện tập" },
+            { hz: "方便", py: "fangbian", vi: "tiện lợi" },
+            { hz: "感兴趣", py: "gan xingqu", vi: "hứng thú" },
+            { hz: "环境", py: "huanjing", vi: "môi trường" },
+            { hz: "解决", py: "jiejue", vi: "giải quyết" },
+            { hz: "突然", py: "turan", vi: "đột nhiên" },
+            { hz: "影响", py: "yingxiang", vi: "ảnh hưởng" }
+        ]
+    };
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const wordInput = document.getElementById('word-input');
+    const scoreEl = document.getElementById('score');
+    const hpEl = document.getElementById('hp');
+    const overlay = document.getElementById('start-overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayDesc = document.getElementById('overlay-desc');
+    const nameInput = document.getElementById('player-name-input');
+    const currentPlayerDisplay = document.getElementById('current-player-display');
+    const leaderboardContent = document.getElementById('leaderboard-content');
+    const levelSelectorContainer = document.getElementById('level-selector-container');
+    const reviewContainer = document.getElementById('game-review-container');
+    const reviewContentList = document.getElementById('review-content-list');
+
+    let activeVocab = [];
+    let fallingWords = [];
+    let playedWords = []; // Theo dõi từ vựng đã xuất hiện trong màn chơi để hiển thị ôn tập
+    let score = 0;
+    let hp = 3;
+    let gameInterval;
+    let spawnInterval;
+    let isPlaying = false;
+    let speedMultiplier = 0.5;
+    let currentLevel = 1;
+    let playerName = "Player 1";
+    let activeTab = 1;
+
+    function displayLeaderboard(levelToShow = null) {
+        if (levelToShow !== null) {
+            activeTab = levelToShow;
+        }
+        
+        for (let l = 1; l <= 3; l++) {
+            const tab = document.getElementById(`tab-l${l}`);
+            if (tab) {
+                if (l === activeTab) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            }
+        }
+
+        const key = `hsk_leaderboard_level_${activeTab}`;
+        let leaderboard = JSON.parse(localStorage.getItem(key)) || [];
+        leaderboard.sort((a, b) => b.score - a.score);
+
+        leaderboardContent.innerHTML = '';
+        if (leaderboard.length === 0) {
+            leaderboardContent.innerHTML = `<div style="text-align:center; font-size:12px; color:#a6adc8; padding-top:10px;">Màn này chưa có lượt chơi nào!</div>`;
+            return;
+        }
+
+        leaderboard.slice(0, 5).forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'leaderboard-item';
+            div.innerHTML = `
+                <span>${index + 1}. <b>${item.name}</b></span>
+                <span style="color:#a6e3a1;">${item.score} đ</span>
+            `;
+            leaderboardContent.appendChild(div);
+        });
+    }
+
+    function changeLeaderboardTab(level) {
+        activeTab = level;
+        displayLeaderboard();
+    }
+
+    function saveScore(name, finalScore, level) {
+        const key = `hsk_leaderboard_level_${level}`;
+        let leaderboard = JSON.parse(localStorage.getItem(key)) || [];
+        leaderboard.push({ name: name, score: finalScore, date: new Date().toLocaleDateString() });
+        leaderboard.sort((a, b) => b.score - a.score);
+        localStorage.setItem(key, JSON.stringify(leaderboard));
+    }
+
+    class Word {
+        constructor() {
+            const item = activeVocab[Math.floor(Math.random() * activeVocab.length)];
+            this.hz = item.hz;
+            this.py = item.py;
+            this.vi = item.vi;
+            this.x = Math.random() * (canvas.width - 150) + 20;
+            this.y = 0;
+            this.speed = (Math.random() * 0.2 + 0.3) * speedMultiplier;
+            
+            // Thêm từ vào danh sách từ đã chơi nếu chưa có
+            if (!playedWords.some(w => w.hz === this.hz)) {
+                playedWords.push(item);
+            }
+        }
+        draw() {
+            ctx.font = "bold 24px Arial";
+            ctx.fillStyle = "#f38ba8";
+            ctx.fillText(this.hz, this.x, this.y);
+            ctx.font = "14px Arial";
+            ctx.fillStyle = "#89b4fa";
+            ctx.fillText(this.py, this.x, this.y + 16);
+            ctx.font = "12px Arial";
+            ctx.fillStyle = "#a6adc8";
+            ctx.fillText(`(${this.vi})`, this.x, this.y + 30);
+        }
+        update() {
+            this.y += this.speed;
+        }
+    }
+
+    function selectLevel(level) {
+        currentLevel = level;
+        playerName = nameInput.value.trim() || "Vô danh";
+        currentPlayerDisplay.textContent = playerName;
+        activeVocab = vocabulary[level];
+        startGame();
+    }
+
+    function goHome() {
+        overlayTitle.textContent = "HSK Typing Master";
+        overlayDesc.textContent = "Nhập tên và chọn cấp độ của bạn để bắt đầu!";
+        nameInput.style.display = "block";
+        reviewContainer.style.display = "none";
+        levelSelectorContainer.innerHTML = `
+            <button class="btn btn-hsk" onclick="selectLevel(1)">Màn 1: HSK 1</button>
+            <button class="btn btn-hsk" onclick="selectLevel(2)">Màn 2: HSK 2</button>
+            <button class="btn btn-hsk" onclick="selectLevel(3)">Màn 3: HSK 3</button>
+        `;
+        displayLeaderboard(currentLevel);
+    }
+
+    function startGame() {
+        score = 0;
+        hp = 3;
+        speedMultiplier = 0.5;
+        fallingWords = [];
+        playedWords = [];
+        isPlaying = true;
+        scoreEl.textContent = score;
+        hpEl.textContent = "❤️❤️❤️";
+        overlay.style.display = 'none';
+        wordInput.disabled = false;
+        wordInput.value = '';
+        wordInput.focus();
+
+        clearInterval(gameInterval);
+        clearInterval(spawnInterval);
+        gameInterval = setInterval(updateGame, 1000 / 60);
+        spawnInterval = setInterval(spawnWord, 2500);
+    }
+
+    function spawnWord() {
+        if (isPlaying) {
+            fallingWords.push(new Word());
+            speedMultiplier += 0.008;
+        }
+    }
+
+    function updateGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = fallingWords.length - 1; i >= 0; i--) {
+            let w = fallingWords[i];
+            w.update();
+            w.draw();
+            if (w.y > canvas.height - 20) {
+                fallingWords.splice(i, 1);
+                hp--;
+                hpEl.textContent = "❤️".repeat(Math.max(0, hp));
+                if (hp <= 0) {
+                    isPlaying = false;
+                    clearInterval(gameInterval);
+                    clearInterval(spawnInterval);
+                    wordInput.disabled = true;
+
+                    saveScore(playerName, score, currentLevel);
+
+                    overlayTitle.textContent = "GAME OVER";
+                    overlayDesc.innerHTML = `Người chơi: <b>${playerName}</b><br>Đạt điểm: <b>${score}</b> ở HSK ${currentLevel}`;
+                    nameInput.style.display = "none";
+                    
+                    // Cập nhật danh sách ôn tập từ vựng tiếng Việt
+                    reviewContentList.innerHTML = '';
+                    if (playedWords.length > 0) {
+                        playedWords.forEach(item => {
+                            const row = document.createElement('div');
+                            row.className = 'review-item';
+                            row.innerHTML = `
+                                <span style="color:#f38ba8; font-weight:bold;">${item.hz}</span>
+                                <span style="color:#89b4fa;">${item.py}</span>
+                                <span style="color:#a6e3a1;">${item.vi}</span>
+                            `;
+                            reviewContentList.appendChild(row);
+                        });
+                        reviewContainer.style.display = "block";
+                    } else {
+                        reviewContainer.style.display = "none";
+                    }
+
+                    levelSelectorContainer.innerHTML = `
+                        <button class="btn" onclick="goHome()">Về Trang Chủ</button>
+                    `;
+                    displayLeaderboard(currentLevel);
+                    overlay.style.display = 'flex';
+                }
+            }
+        }
+    }
+
+    wordInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim().toLowerCase();
+        for (let i = 0; i < fallingWords.length; i++) {
+            if (fallingWords[i].py.toLowerCase() === val || fallingWords[i].hz === val) {
+                fallingWords.splice(i, 1);
+                score += 10;
+                scoreEl.textContent = score;
+                wordInput.value = '';
+                break;
+            }
+        }
+    });
+
+    displayLeaderboard(1);
+</script>
+</body>
+</html>
+
